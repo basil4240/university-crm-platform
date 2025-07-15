@@ -1,0 +1,118 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  role      Role     @default(STUDENT)
+  firstName String?
+  lastName  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  coursesTeaching Course[]     @relation("CourseLecturer")
+  enrollments     Enrollment[]
+  assignments     Assignment[]
+
+  @@index([email])
+  @@index([role])
+  @@map("users")
+}
+
+model Course {
+  id          Int      @id @default(autoincrement())
+  title       String
+  credits     Int
+  lecturerId  Int
+  syllabus    String?  @db.Text
+  description String?  @db.Text
+  semester    String?
+  year        Int?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  lecturer    User         @relation("CourseLecturer", fields: [lecturerId], references: [id], onDelete: Cascade)
+  enrollments Enrollment[]
+  assignments Assignment[]
+
+  @@index([lecturerId])
+  @@index([title])
+  @@index([year, semester])
+  @@index([isActive])
+  @@map("courses")
+}
+
+model Enrollment {
+  id          Int              @id @default(autoincrement())
+  courseId    Int
+  studentId   Int
+  status      EnrollmentStatus @default(PENDING)
+  enrolledAt  DateTime         @default(now())
+  completedAt DateTime?
+  finalGrade  Float?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  // Relations
+  course  Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  student User   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([courseId, studentId])
+  @@index([courseId])
+  @@index([studentId])
+  @@index([status])
+  @@map("enrollments")
+}
+
+model Assignment {
+  id          Int       @id @default(autoincrement())
+  courseId    Int
+  studentId   Int
+  title       String
+  description String?   @db.Text
+  file        String? // File path or URL
+  grade       Float?
+  submittedAt DateTime?
+  dueDate     DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relations
+  course  Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  student User   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@index([courseId])
+  @@index([studentId])
+  @@index([dueDate])
+  @@index([submittedAt])
+  @@map("assignments")
+}
+
+enum Role {
+  STUDENT
+  LECTURER
+  ADMIN
+}
+
+enum EnrollmentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
