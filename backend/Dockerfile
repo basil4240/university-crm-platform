@@ -1,30 +1,16 @@
-# Building Stage of the Application
-FROM node:22-alpine AS build
+FROM node:22-alpine AS development
 
 # Working directory
 WORKDIR /app
 
 # Copy package.json and package-lock.json
-COPY package*.json ./
+COPY package.json package-lock.json ./
 
 # Install dependencies
-RUN npm install
+RUN npm ci
 
 # Copy the rest of the file
 COPY . .
 
-# Building the application
-CMD ["npm", "run", "build"]
-
-
-# Production statge of the application
-FROM node:22-alpine as production
-
-# Working directory
-WORKDIR /app
-
-# copy the dist folder
-COPY --from=build /app/dist ./dist
-
 # Start the application
-CMD ["npm", "run", "start:prod"]
+CMD ["sh", "-c", "npx prisma migrate deploy && npx prisma generate && npm run start:dev"]
