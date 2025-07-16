@@ -10,7 +10,8 @@ import { UsersModule } from './users/users.module';
 import { EnrollmentsModule } from './enrollments/enrollments.module';
 
 @Module({
-  imports: [IamModule, CoursesModule, AssignmentsModule, AiModule, CommonModule, UsersModule, EnrollmentsModule],
+  imports: [
+    IamModule, CoursesModule, AssignmentsModule, AiModule, CommonModule, UsersModule, EnrollmentsModule],
   controllers: [AppController],
   providers: [AppService],
 })
